@@ -31,4 +31,23 @@ public interface BusListener {
     /** Fires for every callback transaction the service makes. {@code payload}
      *  is the parcel body after the AIDL interface token. */
     default void onRawEvent(int code, String name, byte[] payload) {}
+
+    // ---- Extended callbacks (additive, backward compatible) ----
+
+    default void onTpmsInfoChanged(TpmsInfo tpms) {}
+    default void onRadarDataChanged(RadarData radar) {}
+    default void onBatteryStateChanged(BatteryState battery) {}
+    default void onWheelSpeedChanged(WheelSpeed speed) {}
+    default void onAdasWarningChanged(AdasWarning adas) {}
+    default void onHevStatusChanged(HevStatus hev) {}
+    default void onParkStateChanged(ParkState park) {}
+    default void onDvrStateChanged(DvrState dvr) {}
+    default void onTravellingInfoChanged(TravellingInfo info) {}
+    default void onFuelConsumptionChanged(FuelConsumption fc) {}
+    default void onRainSensorChanged(RainSensor rain) {}
+    default void onAlarmDataChanged(AlarmData alarm) {}
+    default void onVehicleInfoChanged(VehicleInfoChanged info) {}
+    default void onInstrumentClusterChanged(InstrumentCluster cluster) {}
+    default void onSecondaryOdometerChanged(SecondaryOdometer odo) {}
+    default void onEngineFluidStatusChanged(EngineFluidStatus fluid) {}
 }

@@ -58,6 +58,24 @@ public final class QGBus {
         @Override public void onAccStateChanged(AccState s)            { for (BusListener l : mListeners) l.onAccStateChanged(s); }
         @Override public void onEngineStatusChanged(EngineState s)      { for (BusListener l : mListeners) l.onEngineStatusChanged(s); }
         @Override public void onRawEvent(int code, String n, byte[] p)  { for (BusListener l : mListeners) l.onRawEvent(code, n, p); }
+
+        // ---- Extended fanout (additive, backward compatible) ----
+        @Override public void onTpmsInfoChanged(TpmsInfo t)          { for (BusListener l : mListeners) l.onTpmsInfoChanged(t); }
+        @Override public void onRadarDataChanged(RadarData r)        { for (BusListener l : mListeners) l.onRadarDataChanged(r); }
+        @Override public void onBatteryStateChanged(BatteryState b)  { for (BusListener l : mListeners) l.onBatteryStateChanged(b); }
+        @Override public void onWheelSpeedChanged(WheelSpeed w)      { for (BusListener l : mListeners) l.onWheelSpeedChanged(w); }
+        @Override public void onAdasWarningChanged(AdasWarning a)    { for (BusListener l : mListeners) l.onAdasWarningChanged(a); }
+        @Override public void onHevStatusChanged(HevStatus h)        { for (BusListener l : mListeners) l.onHevStatusChanged(h); }
+        @Override public void onParkStateChanged(ParkState p2)       { for (BusListener l : mListeners) l.onParkStateChanged(p2); }
+        @Override public void onDvrStateChanged(DvrState d)          { for (BusListener l : mListeners) l.onDvrStateChanged(d); }
+        @Override public void onTravellingInfoChanged(TravellingInfo i){ for (BusListener l : mListeners) l.onTravellingInfoChanged(i); }
+        @Override public void onFuelConsumptionChanged(FuelConsumption f){ for (BusListener l : mListeners) l.onFuelConsumptionChanged(f); }
+        @Override public void onRainSensorChanged(RainSensor r2)     { for (BusListener l : mListeners) l.onRainSensorChanged(r2); }
+        @Override public void onAlarmDataChanged(AlarmData a2)       { for (BusListener l : mListeners) l.onAlarmDataChanged(a2); }
+        @Override public void onVehicleInfoChanged(VehicleInfoChanged v){ for (BusListener l : mListeners) l.onVehicleInfoChanged(v); }
+        @Override public void onInstrumentClusterChanged(InstrumentCluster c){ for (BusListener l : mListeners) l.onInstrumentClusterChanged(c); }
+        @Override public void onSecondaryOdometerChanged(SecondaryOdometer o){ for (BusListener l : mListeners) l.onSecondaryOdometerChanged(o); }
+        @Override public void onEngineFluidStatusChanged(EngineFluidStatus e){ for (BusListener l : mListeners) l.onEngineFluidStatusChanged(e); }
     };
 
     private QGBus(Context ctx) {

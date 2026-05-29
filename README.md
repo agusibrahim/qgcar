@@ -196,6 +196,20 @@ bus.addListener(new BusListener() {
         Log.d("car", "wheel " + a.signedDeg() + "°");
     }
 
+    // extended events
+    @Override public void onTpmsInfoChanged(TpmsInfo tpms) {
+        Log.d("car", "FL tire=" + tpms.flPressure + "kPa/" + tpms.flTemp + "°C");
+    }
+    @Override public void onRadarDataChanged(RadarData r) {
+        Log.d("car", "rear-left=" + r.rl + " rear-right=" + r.rr);
+    }
+    @Override public void onAdasWarningChanged(AdasWarning a) {
+        if (a.fcw != 0) showFcwWarning();
+    }
+    @Override public void onHevStatusChanged(HevStatus h) {
+        Log.d("car", "EV SOC=" + h.soc + "%");
+    }
+
     // catch-all for anything not yet decoded
     @Override public void onRawEvent(int code, String name, byte[] payload) {
         Log.d("car", "raw " + name + " (" + code + ") len=" + payload.length);
@@ -207,6 +221,8 @@ bus.disconnect();
 ```
 
 ### Decoded events (typed callbacks)
+
+#### Core events
 
 | Callback                       | Payload type       | Notes                                |
 |--------------------------------|--------------------|--------------------------------------|
@@ -228,8 +244,28 @@ bus.disconnect();
 | `onAirConditionChanged`        | `AirCondition`     | full HVAC status (60+ fields)        |
 | `onLightStatusChanged`         | `LightStatus`      | all exterior lights + turn signal state |
 
-All other events from `CanBusCodes` flow only through `onRawEvent` until
-parsers are added in `internal/ParcelDecoder.java`.
+#### Extended events
+
+| Callback                       | Payload type         | Notes                                |
+|--------------------------------|----------------------|--------------------------------------|
+| `onTpmsInfoChanged`            | `TpmsInfo`           | pressure + temp per wheel + status   |
+| `onRadarDataChanged`           | `RadarData`          | 8-zone parking sensor distances      |
+| `onBatteryStateChanged`        | `BatteryState`       | voltage, health, charge level        |
+| `onWheelSpeedChanged`          | `WheelSpeed`         | per-wheel speed (float)              |
+| `onAdasWarningChanged`         | `AdasWarning`        | FCW, AEB, LDW, BSD, RCTA, TSR       |
+| `onHevStatusChanged`           | `HevStatus`          | HEV/EV mode, SOC, energy flow       |
+| `onParkStateChanged`           | `ParkState`          | parking assist active/direction/type |
+| `onDvrStateChanged`            | `DvrState`           | dashcam recording/storage/error      |
+| `onTravellingInfoChanged`      | `TravellingInfo`     | trip dist, duration, fuel, avg speed |
+| `onFuelConsumptionChanged`     | `FuelConsumption`    | instant/avg/historical consumption   |
+| `onEngineFluidStatusChanged`   | `EngineFluidStatus`  | oil, coolant, brake/wiper fluid      |
+| `onRainSensorChanged`          | `RainSensor`         | rainfall intensity level             |
+| `onAlarmDataChanged`           | `AlarmData`          | vehicle alarm type + state           |
+| `onVehicleInfoChanged`         | `VehicleInfoChanged` | generic vehicle info events          |
+| `onInstrumentClusterChanged`   | `InstrumentCluster`  | brightness, theme, dimmer            |
+| `onSecondaryOdometerChanged`   | `SecondaryOdometer`  | trip A + trip B                      |
+
+`onRawEvent` still fires for every transaction as a catch-all.
 
 ---
 
@@ -327,68 +363,6 @@ load the JNI bridge from a normal user app.
 
 Requires Android SDK with `platforms/android-29/android.jar` reachable
 via `$ANDROID_HOME` (default: `~/Library/Android/sdk`).
-
----
-
-## Source layout
-
-```
-src/
-  com/ais/camera/
-    AisCamera.java                  ← MUST keep exact package (JNI binding)
-
-  com/qgcar/camera/                 ← public Camera API
-    QGCamera.java
-    CameraChannel.java
-    FrameListener.java
-    FisheyeCorrector.java
-
-  com/qgcar/avm/                    ← public AVM overlay API
-    QGAVM.java
-    AvmListener.java
-
-  com/qgcar/keys/                   ← public Steering-wheel Keys API
-    QGKeys.java
-    QGKeyCode.java
-    QGKeyAction.java
-    KeyEvent.java
-    KeyListener.java
-
-  com/qgcar/bus/                    ← public CAN Bus API (read + write)
-    QGBus.java                      ← main bus client
-    BusListener.java                ← event listener interface
-    CanBusCodes.java                ← callback transaction codes
-    CarSignalCodes.java             ← alternate signal channel codes
-
-    AirCondition.java               ← full HVAC state (Parcelable, 60+ fields)
-    AirConditionState.java          ← AC command enum (blower, temp, defrost, …)
-    VehicleState.java               ← vehicle control enum (200+ parameters)
-    DoorStatus.java                 ← per-door/lock state
-    DoorState.java                  ← door state enum
-    WindowStatus.java               ← per-window + sunroof state
-    LightStatus.java                ← exterior light status
-    Gear.java                       ← gear enum (P/R/N/D/B/S)
-    FuelLevel.java                  ← fuel tank data
-    Odometer.java                   ← trip + total odometer
-    SteeringAngle.java              ← steering wheel angle
-    SeatBelts.java / SeatBeltState.java
-    AccState.java / EngineState.java
-
-    internal/
-      RawBinderProbe.java           ← low-level Binder service connector
-      ParcelDecoder.java            ← parcel → typed callback dispatcher
-
-  com/qinggan/system/              ← vendor AIDL stubs (KeyManagerService)
-    IKeyManagerService.java
-    IKeyManagerCallback.java
-    QGKeyEvent.java
-```
-
-**36 Java files · ~3,900 lines of code**
-
-`AisCamera` and `IKeyManagerService` packages are vendor-defined; the
-package + class names cannot be changed because native code binds against
-the fully-qualified Java names.
 
 ---
 

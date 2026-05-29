@@ -327,11 +327,11 @@ int val = bus.getVehicleState(VehicleState.FRONT_WIPER_OUTPUT_STATUS);
 
 ```java
 // Trigger preset vehicle behaviours
-bus.setVehicleSceneMode(0);   // Base / Off
-bus.setVehicleSceneMode(1);   // Cool
-bus.setVehicleSceneMode(6);   // Rain / Snow — auto-close windows
-bus.setVehicleSceneMode(7);   // Smoke — open windows for ventilation
-bus.setVehicleSceneMode(13);  // Sky — full sunroof open
+bus.setVehicleSceneMode(SceneMode.BASE);       // reset to default
+bus.setVehicleSceneMode(SceneMode.COOL);       // Cool mode
+bus.setVehicleSceneMode(SceneMode.RAIN_SNOW);  // auto-close windows
+bus.setVehicleSceneMode(SceneMode.SMOKE);      // open windows for ventilation
+bus.setVehicleSceneMode(SceneMode.SKY);        // full sunroof open
 ```
 
 ---

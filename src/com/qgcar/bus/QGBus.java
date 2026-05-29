@@ -363,7 +363,7 @@ public final class QGBus {
      * @return true if binder transaction succeeded.
      */
     public boolean setSunroofFullOpen() {
-        return setVehicleSceneMode(13);
+        return setVehicleSceneMode(SceneMode.SKY);
     }
 
     /**
@@ -371,7 +371,7 @@ public final class QGBus {
      * @return true if binder transaction succeeded.
      */
     public boolean setSunroofClose() {
-        return setVehicleSceneMode(0);
+        return setVehicleSceneMode(SceneMode.BASE);
     }
 
     /**
@@ -407,18 +407,18 @@ public final class QGBus {
 
     /**
      * Set vehicle scene mode. Used to trigger preset vehicle behaviours.
-     * Known modes: 0=Base/Off, 1=Cool, 6=Rain/Snow(close windows), 7=Smoke(open windows), 13=Sky(full sunroof open).
-     * @param mode the scene mode integer.
+     * @param mode the scene mode enum.
      * @return true if binder transaction succeeded.
+     * @see SceneMode
      */
-    public boolean setVehicleSceneMode(int mode) {
+    public boolean setVehicleSceneMode(SceneMode mode) {
         IBinder binder = mProbe.getServiceBinder();
         if (binder == null) return false;
         Parcel data = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         try {
             data.writeInterfaceToken(SVC_DESC);
-            data.writeInt(mode);
+            data.writeInt(mode.getValue());
             // TRANSACTION_setVehicleSceneMode = 69
             binder.transact(69, data, reply, 0);
             reply.readException();

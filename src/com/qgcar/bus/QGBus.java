@@ -1,6 +1,7 @@
 package com.qgcar.bus;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 
@@ -28,6 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public final class QGBus {
 
+    private static final String SVC_MGR  = "qg.canbus";
     private static final String SVC_PKG  = "com.qinggan.canbus.service";
     private static final String SVC_ACT  = "com.qinggan.canbus.CanBusService";
     private static final String SVC_DESC = "com.qinggan.canbus.ICanBusService";
@@ -79,7 +81,7 @@ public final class QGBus {
     };
 
     private QGBus(Context ctx) {
-        mProbe = new RawBinderProbe(ctx, SVC_PKG, SVC_ACT, SVC_DESC, CB_DESC,
+        mProbe = new RawBinderProbe(ctx, SVC_MGR, SVC_PKG, SVC_ACT, SVC_DESC, CB_DESC,
             CanBusCodes.TXN_addCallback,
             new RawBinderProbe.Sink() {
                 @Override public void onEvent(int code, byte[] payload) {
@@ -425,6 +427,634 @@ public final class QGBus {
             return true;
         } catch (Throwable t) {
             return false;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    // ---- Synchronous Getters (ICanBusService) ----
+
+    /** Get Odometer & EV range info synchronously (TXN=1). */
+    public Odometer getOdometer() {
+        Parcel reply = transactNoArgs(1);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readOdometer(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get Door & Lock status synchronously (TXN=2). */
+    public DoorStatus getDoorStatus() {
+        Parcel reply = transactNoArgs(2);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readDoorStatus(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get DVR (dashcam) state synchronously (TXN=3). */
+    public DvrState getDvrState() {
+        Parcel reply = transactNoArgs(3);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readDvrState(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get CAN box firmware version string (TXN=4). */
+    public String getCanBoxVersion() {
+        return transactReadString(4);
+    }
+
+    /** Get exterior light & turn-signal status synchronously (TXN=5). */
+    public LightStatus getLightStatus() {
+        Parcel reply = transactNoArgs(5);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? LightStatus.CREATOR.createFromParcel(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get current transmission gear synchronously (TXN=6). */
+    public Gear getGearStatus() {
+        Parcel reply = transactNoArgs(6);
+        if (reply == null) return Gear.UNKNOWN;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readGear(reply) : Gear.UNKNOWN;
+        } catch (Throwable t) {
+            return Gear.UNKNOWN;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get outside ambient temperature in Celsius synchronously (TXN=7). */
+    public int getAmbientTemperature() {
+        return transactReadInt(7, Integer.MIN_VALUE);
+    }
+
+    /** Get per-wheel speeds synchronously (TXN=8). */
+    public WheelSpeed getWheelSpeed() {
+        Parcel reply = transactNoArgs(8);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readWheelSpeed(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get fuel level & consumption info synchronously (TXN=9). */
+    public FuelLevel getFuelLevel() {
+        Parcel reply = transactNoArgs(9);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readFuelLevel(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get engine coolant temperature in Celsius synchronously (TXN=11). */
+    public int getEngineTemperature() {
+        return transactReadInt(11, Integer.MIN_VALUE);
+    }
+
+    /** Get brake fluid status synchronously (TXN=13). */
+    public int getBrakeFluidStatus() {
+        return transactReadInt(13, -1);
+    }
+
+    /** Get wiper fluid status synchronously (TXN=14). */
+    public int getWiperFluidStatus() {
+        return transactReadInt(14, -1);
+    }
+
+    /** Get instant fuel consumption synchronously (TXN=15). */
+    public int getInstantFuelConsumption() {
+        return transactReadInt(15, -1);
+    }
+
+    /** Get comprehensive fuel consumption synchronously (TXN=16). */
+    public int getComprehensiveFuelConsumption() {
+        return transactReadInt(16, -1);
+    }
+
+    /** Get comprehensive fuel consumption float synchronously (TXN=17). */
+    public float getComprehensiveFuelConsumptionEx() {
+        return transactReadFloat(17, -1f);
+    }
+
+    /** Get engine running status synchronously (TXN=18). */
+    public EngineState getEngineStatus() {
+        return EngineState.fromRaw(transactReadInt(18, -1));
+    }
+
+    /** Get 12V battery state synchronously (TXN=19). */
+    public BatteryState getBatteryState() {
+        Parcel reply = transactNoArgs(19);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readBatteryState(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Request CAN bus to broadcast all current vehicle states (TXN=20). */
+    public boolean queryVehicleState() {
+        Parcel reply = transactNoArgs(20);
+        if (reply == null) return false;
+        reply.recycle();
+        return true;
+    }
+
+    /** Get driver & passenger seat belt status synchronously (TXN=21). */
+    public SeatBelts getSeatBeltStatus() {
+        Parcel reply = transactNoArgs(21);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readSeatBelts(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get illumination level synchronously (TXN=22). */
+    public int getIllumination() {
+        return transactReadInt(22, -1);
+    }
+
+    /** Get secondary/trip odometer value synchronously (TXN=24). */
+    public long getSecondaryOdometer() {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null) return -1L;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            binder.transact(24, data, reply, 0);
+            reply.readException();
+            return reply.readLong();
+        } catch (Throwable t) {
+            return -1L;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /** Get vehicle key state synchronously (TXN=25). */
+    public int getVehicleKeyState() {
+        return transactReadInt(25, -1);
+    }
+
+    /** Get vehicle speed in km/h synchronously (TXN=26). */
+    public int getVehicleSpeed() {
+        return transactReadInt(26, -1);
+    }
+
+    /** Get engine speed in RPM synchronously (TXN=27). */
+    public int getEngineSpeed() {
+        return transactReadInt(27, -1);
+    }
+
+    /** Get front parking radar data synchronously (TXN=34). */
+    public RadarData getFrontRadarData() { return getRadarByTxn(34); }
+
+    /** Get rear parking radar data synchronously (TXN=35). */
+    public RadarData getRearRadarData() { return getRadarByTxn(35); }
+
+    /** Get left parking radar data synchronously (TXN=36). */
+    public RadarData getLeftRadarData() { return getRadarByTxn(36); }
+
+    /** Get right parking radar data synchronously (TXN=37). */
+    public RadarData getRightRadarData() { return getRadarByTxn(37); }
+
+    private RadarData getRadarByTxn(int txn) {
+        Parcel reply = transactNoArgs(txn);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readRadarData(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get reverse tracking status synchronously (TXN=38). */
+    public int getReTracking() {
+        return transactReadInt(38, -1);
+    }
+
+    /** Get handbrake engaged state synchronously (TXN=39). */
+    public boolean isHandBrakeEngaged() {
+        return transactReadInt(39, 0) == 1;
+    }
+
+    /** Get raw handbrake status (0=released, 1=engaged) synchronously (TXN=39). */
+    public int getHandBrakeStatus() {
+        return transactReadInt(39, -1);
+    }
+
+    /** Get engine fluid status synchronously (TXN=40). */
+    public int getEngineFluidStatus() {
+        return transactReadInt(40, -1);
+    }
+
+    /** Get alarm data code synchronously (TXN=41). */
+    public int getAlarmData() {
+        return transactReadInt(41, -1);
+    }
+
+    /** Get steering wheel angle synchronously (TXN=42). */
+    public SteeringAngle getSWCAngle() {
+        Parcel reply = transactNoArgs(42);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readSteeringAngle(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get HEV/EV system mode synchronously (TXN=43). */
+    public int getHevSysMode() {
+        return transactReadInt(43, -1);
+    }
+
+    /** Get windows & sunroof status synchronously (TXN=44). */
+    public WindowStatus getWindowStatus() {
+        Parcel reply = transactNoArgs(44);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readWindowStatus(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get ACC status synchronously (TXN=63). */
+    public AccState getAccStatus() {
+        return AccState.fromRaw(transactReadInt(63, -1));
+    }
+
+    /** Get Tire Pressure Monitoring System (TPMS) info synchronously (TXN=65). */
+    public TpmsInfo getTpmsInfo() {
+        Parcel reply = transactNoArgs(65);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readTpmsInfo(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    /** Get EV/HEV battery remaining capacity (SOC %) synchronously (TXN=66). */
+    public float getBatteryRemainingCapacity() {
+        return transactReadFloat(66, -1f);
+    }
+
+    /** Get rainfall sensor level synchronously (TXN=68). */
+    public int getRainfallLevel() {
+        return transactReadInt(68, -1);
+    }
+
+    /** Get current vehicle scene mode synchronously (TXN=70). */
+    public int getVehicleSceneMode() {
+        return transactReadInt(70, -1);
+    }
+
+    /** Get raw CAN frame data for a given CAN ID (TXN=73). */
+    public int[] getCanRawData(int canId) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null) return null;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            data.writeInt(canId);
+            binder.transact(73, data, reply, 0);
+            reply.readException();
+            return reply.createIntArray();
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /** Get instrument cluster info synchronously (TXN=75). */
+    public InstrumentCluster getInstrumentClusterInfo() {
+        Parcel reply = transactNoArgs(75);
+        if (reply == null) return null;
+        try {
+            return reply.readInt() != 0 ? ParcelDecoder.readInstrumentCluster(reply) : null;
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    // ---- Instrument Cluster (MID / Speedometer) Push APIs ----
+
+    /**
+     * Push Turn-by-Turn navigation info to the car's Instrument Cluster (MID / Speedometer) (TXN=50).
+     */
+    public boolean updateNaviInfo(NaviInfo info) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null || info == null) return false;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            data.writeInt(1);
+            info.writeToVendorParcel(data);
+            binder.transact(50, data, reply, 0);
+            reply.readException();
+            return true;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * Push navigation lane guidance info to the Instrument Cluster (TXN=51).
+     */
+    public boolean updateNaviLaneInfo(boolean show, Bundle laneBundle) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null) return false;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            data.writeInt(show ? 1 : 0);
+            if (laneBundle == null) {
+                data.writeInt(0);
+            } else {
+                data.writeInt(1);
+                laneBundle.writeToParcel(data, 0);
+            }
+            binder.transact(51, data, reply, 0);
+            reply.readException();
+            return true;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * Push media track/artist/radio info to the Instrument Cluster (MID) (TXN=45).
+     */
+    public boolean updateMediaSrcInfo(MediaClusterInfo info) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null || info == null) return false;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            data.writeInt(1);
+            info.writeToVendorParcel(data);
+            binder.transact(45, data, reply, 0);
+            reply.readException();
+            return true;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * Push media playback track numbers & progress to the Instrument Cluster (TXN=46).
+     */
+    public boolean updateMediaPlayInfo(int p1, int p2, int p3) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null) return false;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            data.writeInt(p1);
+            data.writeInt(p2);
+            data.writeInt(p3);
+            binder.transact(46, data, reply, 0);
+            reply.readException();
+            return true;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * Push media connection state to the Instrument Cluster (TXN=48).
+     */
+    public boolean updateMediaConnectInfo(int srcType, int status) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null) return false;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            data.writeInt(srcType);
+            data.writeInt(status);
+            binder.transact(48, data, reply, 0);
+            reply.readException();
+            return true;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * Push phone event to the Instrument Cluster (TXN=49).
+     */
+    public boolean updatePhoneEvent(int event, int state) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null) return false;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            data.writeInt(event);
+            data.writeInt(state);
+            binder.transact(49, data, reply, 0);
+            reply.readException();
+            return true;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * Push phone call info (caller name, number, state, duration) to the Instrument Cluster (TXN=52).
+     */
+    public boolean updatePhoneInfo(PhoneClusterInfo info) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null || info == null) return false;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            data.writeInt(1);
+            info.writeToVendorParcel(data);
+            binder.transact(52, data, reply, 0);
+            reply.readException();
+            return true;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * Push call log list bundle to the Instrument Cluster (TXN=53).
+     */
+    public boolean updateCallListInfo(Bundle bundle) {
+        return transactBundle(53, bundle, false) == 0;
+    }
+
+    /** Batch-set AC state via Bundle (TXN=32). */
+    public int setAirConditionBundleState(Bundle bundle) {
+        return transactBundle(32, bundle, true);
+    }
+
+    /** Batch-set Vehicle state via Bundle (TXN=56). */
+    public int setVehicleBundleState(Bundle bundle) {
+        return transactBundle(56, bundle, true);
+    }
+
+    /** Batch-set Instrument Cluster state via Bundle (TXN=74). */
+    public int setInstrumentClusterBundleState(Bundle bundle) {
+        return transactBundle(74, bundle, true);
+    }
+
+    // ---- Internal transaction helpers ----
+
+    private Parcel transactNoArgs(int txn) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null) return null;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            binder.transact(txn, data, reply, 0);
+            reply.readException();
+            return reply;
+        } catch (Throwable t) {
+            reply.recycle();
+            return null;
+        } finally {
+            data.recycle();
+        }
+    }
+
+    private int transactReadInt(int txn, int defVal) {
+        Parcel reply = transactNoArgs(txn);
+        if (reply == null) return defVal;
+        try {
+            return reply.readInt();
+        } catch (Throwable t) {
+            return defVal;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    private float transactReadFloat(int txn, float defVal) {
+        Parcel reply = transactNoArgs(txn);
+        if (reply == null) return defVal;
+        try {
+            return reply.readFloat();
+        } catch (Throwable t) {
+            return defVal;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    private String transactReadString(int txn) {
+        Parcel reply = transactNoArgs(txn);
+        if (reply == null) return null;
+        try {
+            return reply.readString();
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            reply.recycle();
+        }
+    }
+
+    private int transactBundle(int txn, Bundle bundle, boolean hasIntReturn) {
+        IBinder binder = mProbe.getServiceBinder();
+        if (binder == null) return -1;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(SVC_DESC);
+            if (bundle == null) {
+                data.writeInt(0);
+            } else {
+                data.writeInt(1);
+                bundle.writeToParcel(data, 0);
+            }
+            binder.transact(txn, data, reply, 0);
+            reply.readException();
+            return hasIntReturn ? reply.readInt() : 0;
+        } catch (Throwable t) {
+            return -1;
         } finally {
             data.recycle();
             reply.recycle();

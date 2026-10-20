@@ -9,6 +9,8 @@ import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
 
+import com.qgcar.bus.internal.RawBinderProbe;
+
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -164,10 +166,15 @@ public final class QGAVM {
 
     public static QGAVM connect(Context ctx) {
         QGAVM a = new QGAVM(ctx);
+        IBinder sys = RawBinderProbe.getSystemServiceBinder("qg.system_policy");
+        if (sys != null) {
+            a.mService = sys;
+            a.tryRegisterCallback();
+        }
         Intent it = new Intent(SVC_ACTION);
         it.setPackage(SVC_PKG);
         boolean ok = a.mCtx.bindService(it, a.mConn, Context.BIND_AUTO_CREATE);
-        if (!ok) throw new RuntimeException("Cannot bind to " + SVC_ACTION);
+        if (!ok && a.mService == null) throw new RuntimeException("Cannot bind to " + SVC_ACTION);
         return a;
     }
 

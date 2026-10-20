@@ -47,17 +47,26 @@ public final class CanBusCodes {
     public static final int onTravellingInfo                     = 38;
     public static final int onAccStateChanged                    = 39;
     public static final int onRealityWarningInfoChange           = 43;
+    public static final int onRealityWarningInfoChanged          = 44;
     public static final int onTPMSInfoChange                     = 45;
+    public static final int onBatteryRemainingCapacityChanged    = 46;
     public static final int onPowerLevelChanged                  = 47;
     public static final int onInstantaneousFuelConsumptionChanged= 48;
     public static final int onRainFallLevelChanged               = 49;
     public static final int onVehicleSceneModeChanged            = 50;
     public static final int onCanRawDataChanged                  = 51;
+    public static final int onICMReqMediaPlay                    = 52;
+    public static final int onICMReqMediaEvent                   = 53;
+    public static final int onICMReqDialing                      = 54;
+    public static final int onICMReqCallEventChanged             = 55;
     public static final int onInstrumentClusterInfoChanged       = 56;
+    public static final int onSeatMemoryModulenfoChanged         = 57;
     public static final int onVehicleInfoChanged                 = 58;
 
     /** Service-side transaction code for addCallback(callback). */
     public static final int TXN_addCallback = 28;
+    /** Service-side transaction code for removeCallback(callback). */
+    public static final int TXN_removeCallback = 29;
 
     public static String nameOf(int code) {
         switch (code) {
@@ -78,15 +87,47 @@ public final class CanBusCodes {
             case 15: return "onWheelSpeedChanged";
             case 16: return "onVehicleSpeedChanged";
             case 17: return "onFuelLevelChanged";
+            case 18: return "onWheelCountChanged";
             case 19: return "onEngineTemperatureChanged";
+            case 20: return "onBrakePadStatusChanged";
+            case 21: return "onBrakeFluidStatusChanged";
+            case 22: return "onWiperFluidStatusChanged";
+            case 23: return "onFuelConsumptionChanged";
             case 24: return "onEngineStatusChanged";
             case 25: return "onOdometerChanged";
+            case 26: return "onBatteryStateChanged";
+            case 27: return "onCarKeyChanged";
             case 28: return "onIlluminationChanged";
+            case 29: return "onVehicleIOChanged";
+            case 30: return "onSecondaryOdometerChanged";
             case 31: return "onVehicleKeyStateChanged";
             case 32: return "onWindowsStatusChanged";
+            case 33: return "onAlarmDataChanged";
             case 34: return "onSWCAngleChanged";
+            case 35: return "onHEVSystemModelChanged";
+            case 36: return "onVehicleStateChanged";
+            case 37: return "onVehicleCenterControlEnabledChanged";
+            case 38: return "onTravellingInfo";
             case 39: return "onAccStateChanged";
+            case 40: return "onVehicleStateSettingResponse";
+            case 41: return "onVehicleStateSettingResponseEx";
+            case 42: return "onFactoryModeChanged";
+            case 43: return "onRealityWarningInfoChange";
+            case 44: return "onRealityWarningInfoChanged";
+            case 45: return "onTPMSInfoChange";
+            case 46: return "onBatteryRemainingCapacityChanged";
+            case 47: return "onPowerLevelChanged";
+            case 48: return "onInstantaneousFuelConsumptionChanged";
+            case 49: return "onRainFallLevelChanged";
+            case 50: return "onVehicleSceneModeChanged";
             case 51: return "onCanRawDataChanged";
+            case 52: return "onICMReqMediaPlay";
+            case 53: return "onICMReqMediaEvent";
+            case 54: return "onICMReqDialing";
+            case 55: return "onICMReqCallEventChanged";
+            case 56: return "onInstrumentClusterInfoChanged";
+            case 57: return "onSeatMemoryModulenfoChanged";
+            case 58: return "onVehicleInfoChanged";
             default: return "code_" + code;
         }
     }

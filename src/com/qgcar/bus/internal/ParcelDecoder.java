@@ -138,7 +138,12 @@ public final class ParcelDecoder {
     }
 
     private static void decodeDoor(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
+        if (p.readInt() == 0) return;
+        DoorStatus ds = readDoorStatus(p);
+        try { cb.onDoorStatusChanged(ds); } catch (Throwable ignored) {}
+    }
+
+    public static DoorStatus readDoorStatus(Parcel p) {
         // Field order from DoorStatus.createFromParcel: bonnet, fL, fLLock, fR,
         // fRLock, loadSpace, rL, rLLock, rR, rRLock.
         DoorState bonnet = readDoor(p);
@@ -151,31 +156,43 @@ public final class ParcelDecoder {
         DoorState rLLock = readDoor(p);
         DoorState rR = readDoor(p);
         DoorState rRLock = readDoor(p);
-        DoorStatus ds = new DoorStatus(bonnet, fL, fLLock, fR, fRLock,
+        return new DoorStatus(bonnet, fL, fLLock, fR, fRLock,
             trunk, rL, rLLock, rR, rRLock);
-        try { cb.onDoorStatusChanged(ds); } catch (Throwable ignored) {}
     }
 
     private static void decodeGear(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
-        // GearState.writeToParcel writes ordinal() then value -- two ints.
-        int ord = p.readInt();
-        try { p.readInt(); } catch (Throwable ignored) {} // discard 'value'
-        Gear g = Gear.fromOrdinal(ord);
+        if (p.readInt() == 0) return;
+        Gear g = readGear(p);
         try { cb.onGearStatusChanged(g); } catch (Throwable ignored) {}
     }
 
+    public static Gear readGear(Parcel p) {
+        // GearState.writeToParcel writes ordinal() then value -- two ints.
+        int ord = p.readInt();
+        try { p.readInt(); } catch (Throwable ignored) {} // discard 'value'
+        return Gear.fromOrdinal(ord);
+    }
+
     private static void decodeSeatBelt(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
-        int driver = p.readInt();
-        int pass = p.readInt();
-        SeatBelts sb = new SeatBelts(SeatBeltState.fromRaw(driver),
-            SeatBeltState.fromRaw(pass));
+        if (p.readInt() == 0) return;
+        SeatBelts sb = readSeatBelts(p);
         try { cb.onSeatBeltChanged(sb); } catch (Throwable ignored) {}
     }
 
+    public static SeatBelts readSeatBelts(Parcel p) {
+        int driver = p.readInt();
+        int pass = p.readInt();
+        return new SeatBelts(SeatBeltState.fromRaw(driver),
+            SeatBeltState.fromRaw(pass));
+    }
+
     private static void decodeWindow(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
+        if (p.readInt() == 0) return;
+        WindowStatus w = readWindowStatus(p);
+        try { cb.onWindowStatusChanged(w); } catch (Throwable ignored) {}
+    }
+
+    public static WindowStatus readWindowStatus(Parcel p) {
         DoorState fL = readDoor(p);
         DoorState fR = readDoor(p);
         DoorState rL = readDoor(p);
@@ -189,13 +206,17 @@ public final class ParcelDecoder {
         float rLPos = p.readFloat();
         float rRPos = p.readFloat();
         int tilt = p.readInt();
-        WindowStatus w = new WindowStatus(fL, fR, rL, rR, sunroof, roll,
+        return new WindowStatus(fL, fR, rL, rR, sunroof, roll,
             sunPos, rollPos, fLPos, fRPos, rLPos, rRPos, tilt);
-        try { cb.onWindowStatusChanged(w); } catch (Throwable ignored) {}
     }
 
     private static void decodeFuel(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
+        if (p.readInt() == 0) return;
+        FuelLevel f = readFuelLevel(p);
+        try { cb.onFuelLevelChanged(f); } catch (Throwable ignored) {}
+    }
+
+    public static FuelLevel readFuelLevel(Parcel p) {
         int capacity = p.readInt();
         int remain = p.readInt();
         float pct = p.readFloat();
@@ -204,39 +225,46 @@ public final class ParcelDecoder {
         float avg = p.readFloat();
         float histAvg = p.readFloat();
         float resetAvg = p.readFloat();
-        FuelLevel f = new FuelLevel(capacity, remain, pct, shortage,
+        return new FuelLevel(capacity, remain, pct, shortage,
             instant, avg, histAvg, resetAvg);
-        try { cb.onFuelLevelChanged(f); } catch (Throwable ignored) {}
     }
 
     private static void decodeOdometer(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
+        if (p.readInt() == 0) return;
+        Odometer odo = readOdometer(p);
+        try { cb.onOdometerChanged(odo); } catch (Throwable ignored) {}
+    }
+
+    public static Odometer readOdometer(Parcel p) {
         float canTravel = p.readFloat();
         float evRange = p.readFloat();
         float endurance = p.readFloat();
         float power = p.readFloat();
         float chargeRemain = p.readFloat();
         float total = p.readFloat();
-        Odometer odo = new Odometer(canTravel, evRange, endurance, power, chargeRemain, total);
-        try { cb.onOdometerChanged(odo); } catch (Throwable ignored) {}
+        return new Odometer(canTravel, evRange, endurance, power, chargeRemain, total);
     }
 
     private static void decodeSwc(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
-        int dir = p.readInt();
-        int angle = p.readInt();
-        SteeringAngle a = new SteeringAngle(SteeringAngle.Direction.fromRaw(dir), angle);
+        if (p.readInt() == 0) return;
+        SteeringAngle a = readSteeringAngle(p);
         try { cb.onSWCAngleChanged(a); } catch (Throwable ignored) {}
     }
 
+    public static SteeringAngle readSteeringAngle(Parcel p) {
+        int dir = p.readInt();
+        int angle = p.readInt();
+        return new SteeringAngle(SteeringAngle.Direction.fromRaw(dir), angle);
+    }
+
     private static void decodeLight(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
+        if (p.readInt() == 0) return;
         LightStatus ls = LightStatus.CREATOR.createFromParcel(p);
         try { cb.onLightStatusChanged(ls); } catch (Throwable ignored) {}
     }
 
     private static void decodeAirCondition(Parcel p, BusListener cb) {
-        p.readInt(); // Skip presence token
+        if (p.readInt() == 0) return;
         AirCondition ac = AirCondition.CREATOR.createFromParcel(p);
         try { cb.onAirConditionChanged(ac); } catch (Throwable ignored) {}
     }
@@ -244,169 +272,213 @@ public final class ParcelDecoder {
     // ---- Extended decoder methods ----
 
     private static void decodeTpms(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
-        float flP = p.readFloat();
-        float frP = p.readFloat();
-        float rlP = p.readFloat();
-        float rrP = p.readFloat();
-        float flT = p.readFloat();
-        float frT = p.readFloat();
-        float rlT = p.readFloat();
-        float rrT = p.readFloat();
+        if (p.readInt() == 0) return;
+        TpmsInfo tpms = readTpmsInfo(p);
+        try { cb.onTpmsInfoChanged(tpms); } catch (Throwable ignored) {}
+    }
+
+    public static TpmsInfo readTpmsInfo(Parcel p) {
+        // Exact order from com.qinggan.canbus.TPMSInfo$1.createFromParcel:
+        // mSystemStatus, 4 warning ints (FL, FR, RL, RR),
+        // 4 temperature floats (FL, FR, RL, RR), 4 pressure floats (FL, FR, RL, RR).
+        int sysStatus = p.readInt();
         int flS = p.readInt();
         int frS = p.readInt();
         int rlS = p.readInt();
         int rrS = p.readInt();
-        TpmsInfo tpms = new TpmsInfo(flP, frP, rlP, rrP, flT, frT, rlT, rrT, flS, frS, rlS, rrS);
-        try { cb.onTpmsInfoChanged(tpms); } catch (Throwable ignored) {}
+        float flT = p.readFloat();
+        float frT = p.readFloat();
+        float rlT = p.readFloat();
+        float rrT = p.readFloat();
+        float flP = p.readFloat();
+        float frP = p.readFloat();
+        float rlP = p.readFloat();
+        float rrP = p.readFloat();
+        return new TpmsInfo(flP, frP, rlP, rrP, flT, frT, rlT, rrT, flS, frS, rlS, rrS);
     }
 
     private static void decodeRadar(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
-        int fl = p.readInt();
-        int fcl = p.readInt();
-        int fcr = p.readInt();
-        int fr = p.readInt();
-        int rl = p.readInt();
-        int rcl = p.readInt();
-        int rcr = p.readInt();
-        int rr = p.readInt();
-        RadarData radar = new RadarData(fl, fcl, fcr, fr, rl, rcl, rcr, rr);
+        if (p.readInt() == 0) return;
+        RadarData radar = readRadarData(p);
         try { cb.onRadarDataChanged(radar); } catch (Throwable ignored) {}
     }
 
+    public static RadarData readRadarData(Parcel p) {
+        // RadarData$1.createFromParcel starts with readParcelable(RadarType):
+        // String className + int ordinal + int value (when non-null), followed by
+        // 4 distance levels and 4 distances.
+        String radarTypeClass = p.readString();
+        int radarTypeOrd = 0;
+        if (radarTypeClass != null) {
+            radarTypeOrd = p.readInt();
+            p.readInt(); // value
+        }
+        int l1 = p.readInt();
+        int l2 = p.readInt();
+        int l3 = p.readInt();
+        int l4 = p.readInt();
+        int d1 = p.readInt();
+        int d2 = p.readInt();
+        int d3 = p.readInt();
+        int d4 = p.readInt();
+        // Use distance if populated, otherwise level
+        int v1 = (d1 > 0 && d1 != 2147483647) ? d1 : l1;
+        int v2 = (d2 > 0 && d2 != 2147483647) ? d2 : l2;
+        int v3 = (d3 > 0 && d3 != 2147483647) ? d3 : l3;
+        int v4 = (d4 > 0 && d4 != 2147483647) ? d4 : l4;
+        if (radarTypeOrd == 1) { // Rear radar
+            return new RadarData(0, 0, 0, 0, v1, v2, v3, v4);
+        }
+        return new RadarData(v1, v2, v3, v4, 0, 0, 0, 0);
+    }
+
     private static void decodeBattery(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
-        float voltage = p.readFloat();
-        int health = p.readInt();
-        int charge = p.readInt();
-        BatteryState bat = new BatteryState(voltage, health, charge);
+        if (p.readInt() == 0) return;
+        BatteryState bat = readBatteryState(p);
         try { cb.onBatteryStateChanged(bat); } catch (Throwable ignored) {}
     }
 
+    public static BatteryState readBatteryState(Parcel p) {
+        // BatteryState$1.createFromParcel reads mVoltageLevel (int), mVoltageValue (int)
+        int voltageLevel = p.readInt();
+        int voltageRaw = p.readInt();
+        float voltage = (voltageRaw > 100) ? (voltageRaw / 10.0f) : (float) voltageRaw;
+        return new BatteryState(voltage, voltageLevel, voltageRaw);
+    }
+
     private static void decodeWheelSpeed(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
+        if (p.readInt() == 0) return;
+        WheelSpeed ws = readWheelSpeed(p);
+        try { cb.onWheelSpeedChanged(ws); } catch (Throwable ignored) {}
+    }
+
+    public static WheelSpeed readWheelSpeed(Parcel p) {
         float fl = p.readFloat();
         float fr = p.readFloat();
         float rl = p.readFloat();
         float rr = p.readFloat();
-        WheelSpeed ws = new WheelSpeed(fl, fr, rl, rr);
-        try { cb.onWheelSpeedChanged(ws); } catch (Throwable ignored) {}
+        return new WheelSpeed(fl, fr, rl, rr);
     }
 
     private static void decodeDvr(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
-        int rec = p.readInt();
-        int storage = p.readInt();
-        int error = p.readInt();
-        DvrState dvr = new DvrState(rec, storage, error);
+        if (p.readInt() == 0) return;
+        DvrState dvr = readDvrState(p);
         try { cb.onDvrStateChanged(dvr); } catch (Throwable ignored) {}
     }
 
+    public static DvrState readDvrState(Parcel p) {
+        int rec = p.readInt();
+        int wifi = p.readInt();
+        int photo = p.readInt();
+        return new DvrState(rec, wifi, photo);
+    }
+
     private static void decodePark(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
+        // ICanBusServiceCallback$Stub case 7: onParkStateChanged(p.readInt(), p.readInt())
         int active = p.readInt();
-        int dir = p.readInt();
-        int type = p.readInt();
+        int dir = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int type = p.dataAvail() >= 4 ? p.readInt() : 0;
         ParkState park = new ParkState(active, dir, type);
         try { cb.onParkStateChanged(park); } catch (Throwable ignored) {}
     }
 
     private static void decodeHev(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
+        // ICanBusServiceCallback$Stub case 35: onHEVSystemModelChanged(p.readInt())
         int mode = p.readInt();
-        int soc = p.readInt();
-        int flow = p.readInt();
-        int recovery = p.readInt();
-        int power = p.readInt();
+        int soc = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int flow = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int recovery = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int power = p.dataAvail() >= 4 ? p.readInt() : 0;
         HevStatus hev = new HevStatus(mode, soc, flow, recovery, power);
         try { cb.onHevStatusChanged(hev); } catch (Throwable ignored) {}
     }
 
     private static void decodeTravelling(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
-        float dist = p.readFloat();
-        float dur = p.readFloat();
-        float fuel = p.readFloat();
-        float avgFuel = p.readFloat();
-        float avgSpd = p.readFloat();
-        TravellingInfo info = new TravellingInfo(dist, dur, fuel, avgFuel, avgSpd);
+        // ICanBusServiceCallback$Stub case 38: TravellingInfoType + float
+        if (p.readInt() != 0) {
+            p.readInt(); // ordinal
+            if (p.dataAvail() >= 8) p.readInt(); // value
+        }
+        float val = p.dataAvail() >= 4 ? p.readFloat() : 0f;
+        TravellingInfo info = new TravellingInfo(val, 0f, 0f, 0f, 0f);
         try { cb.onTravellingInfoChanged(info); } catch (Throwable ignored) {}
     }
 
     private static void decodeEngineFluid(Parcel p, BusListener cb, int code) {
-        p.readInt(); // presence token
-        // Combined from multiple events — each event may carry different subset
-        int oil = (code == CanBusCodes.onEngineFluidStatusChanged) ? p.readInt() : 0;
-        int coolant = (code == CanBusCodes.onEngineFluidStatusChanged) ? p.readInt() : 0;
-        int brakePad = (code == CanBusCodes.onBrakePadStatusChanged) ? p.readInt() : 0;
-        int brakeFluid = (code == CanBusCodes.onBrakeFluidStatusChanged) ? p.readInt() : 0;
-        int wiperFluid = (code == CanBusCodes.onWiperFluidStatusChanged) ? p.readInt() : 0;
+        int val = p.readInt();
+        int oil = (code == CanBusCodes.onEngineFluidStatusChanged) ? val : 0;
+        int coolant = 0;
+        int brakePad = (code == CanBusCodes.onBrakePadStatusChanged && p.dataAvail() >= 4) ? p.readInt() : 0;
+        int brakeFluid = (code == CanBusCodes.onBrakeFluidStatusChanged) ? val : 0;
+        int wiperFluid = (code == CanBusCodes.onWiperFluidStatusChanged) ? val : 0;
         EngineFluidStatus fluid = new EngineFluidStatus(oil, coolant, brakePad, brakeFluid, wiperFluid);
         try { cb.onEngineFluidStatusChanged(fluid); } catch (Throwable ignored) {}
     }
 
     private static void decodeFuelConsumption(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
         float instant = p.readFloat();
-        float avg = p.readFloat();
-        float hist = p.readFloat();
-        float resetAvg = p.readFloat();
+        float avg = p.dataAvail() >= 4 ? p.readFloat() : 0f;
+        float hist = p.dataAvail() >= 4 ? p.readFloat() : 0f;
+        float resetAvg = p.dataAvail() >= 4 ? p.readFloat() : 0f;
         FuelConsumption fc = new FuelConsumption(instant, avg, hist, resetAvg);
         try { cb.onFuelConsumptionChanged(fc); } catch (Throwable ignored) {}
     }
 
     private static void decodeRain(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
+        // ICanBusServiceCallback$Stub case 49: onRainFallLevelChanged(p.readInt())
         int level = p.readInt();
         RainSensor rain = new RainSensor(level);
         try { cb.onRainSensorChanged(rain); } catch (Throwable ignored) {}
     }
 
     private static void decodeAlarm(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
+        // ICanBusServiceCallback$Stub case 33: onAlarmDataChanged(p.readInt())
         int type = p.readInt();
-        int state = p.readInt();
+        int state = p.dataAvail() >= 4 ? p.readInt() : 0;
         AlarmData alarm = new AlarmData(type, state);
         try { cb.onAlarmDataChanged(alarm); } catch (Throwable ignored) {}
     }
 
     private static void decodeAdas(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
+        if (p.readInt() == 0) return;
         int fcw = p.readInt();
-        int aeb = p.readInt();
-        int ldw = p.readInt();
-        int bsd = p.readInt();
-        int rcta = p.readInt();
-        int tsrSpeed = p.readInt();
-        int tsrUnit = p.readInt();
+        int aeb = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int ldw = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int bsd = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int rcta = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int tsrSpeed = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int tsrUnit = p.dataAvail() >= 4 ? p.readInt() : 0;
         AdasWarning adas = new AdasWarning(fcw, aeb, ldw, bsd, rcta, tsrSpeed, tsrUnit);
         try { cb.onAdasWarningChanged(adas); } catch (Throwable ignored) {}
     }
 
     private static void decodeVehicleInfo(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
+        if (p.readInt() == 0) return;
         int type = p.readInt();
-        int v1 = p.readInt();
-        int v2 = p.readInt();
-        int v3 = p.readInt();
+        int v1 = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int v2 = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int v3 = p.dataAvail() >= 4 ? p.readInt() : 0;
         VehicleInfoChanged info = new VehicleInfoChanged(type, v1, v2, v3);
         try { cb.onVehicleInfoChanged(info); } catch (Throwable ignored) {}
     }
 
     private static void decodeInstrumentCluster(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
-        int bright = p.readInt();
-        int theme = p.readInt();
-        int dimmer = p.readInt();
-        InstrumentCluster cluster = new InstrumentCluster(bright, theme, dimmer);
+        if (p.readInt() == 0) return;
+        InstrumentCluster cluster = readInstrumentCluster(p);
         try { cb.onInstrumentClusterChanged(cluster); } catch (Throwable ignored) {}
     }
 
+    public static InstrumentCluster readInstrumentCluster(Parcel p) {
+        int bright = p.readInt();
+        int theme = p.dataAvail() >= 4 ? p.readInt() : 0;
+        int dimmer = p.dataAvail() >= 4 ? p.readInt() : 0;
+        return new InstrumentCluster(bright, theme, dimmer);
+    }
+
     private static void decodeSecondaryOdometer(Parcel p, BusListener cb) {
-        p.readInt(); // presence token
-        float tripA = p.readFloat();
-        float tripB = p.readFloat();
+        // ICanBusServiceCallback$Stub case 30: onSecondaryOdometerChanged(p.readInt())
+        float tripA = p.readInt();
+        float tripB = p.dataAvail() >= 4 ? p.readFloat() : 0f;
         SecondaryOdometer odo = new SecondaryOdometer(tripA, tripB);
         try { cb.onSecondaryOdometerChanged(odo); } catch (Throwable ignored) {}
     }

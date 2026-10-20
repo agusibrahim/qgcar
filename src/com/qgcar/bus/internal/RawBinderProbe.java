@@ -25,6 +25,7 @@ public final class RawBinderProbe {
     }
 
     private final Context mCtx;
+    private final String mServiceManagerName;
     private final String mServicePackage;
     private final String mServiceAction;
     private final String mServiceDescriptor;
@@ -32,7 +33,7 @@ public final class RawBinderProbe {
     private final int mAddCallbackTxnCode;
     private final Sink mSink;
 
-    private IBinder mService;
+    private volatile IBinder mService;
     private boolean mBound;
     private final Binder mCallback;
 
@@ -40,7 +41,16 @@ public final class RawBinderProbe {
                           String servicePackage, String serviceAction,
                           String serviceDescriptor, String callbackDescriptor,
                           int addCallbackTxnCode, Sink sink) {
+        this(ctx, null, servicePackage, serviceAction, serviceDescriptor, callbackDescriptor, addCallbackTxnCode, sink);
+    }
+
+    public RawBinderProbe(Context ctx,
+                          String serviceManagerName,
+                          String servicePackage, String serviceAction,
+                          String serviceDescriptor, String callbackDescriptor,
+                          int addCallbackTxnCode, Sink sink) {
         mCtx = ctx.getApplicationContext();
+        mServiceManagerName = serviceManagerName;
         mServicePackage = servicePackage;
         mServiceAction = serviceAction;
         mServiceDescriptor = serviceDescriptor;
@@ -84,11 +94,30 @@ public final class RawBinderProbe {
     }
 
     public boolean start() {
+        if (mServiceManagerName != null) {
+            IBinder b = getSystemServiceBinder(mServiceManagerName);
+            if (b != null) {
+                mService = b;
+                registerCallback();
+                mSink.onConnected(true);
+            }
+        }
         Intent it = new Intent(mServiceAction);
         it.setPackage(mServicePackage);
         boolean ok = mCtx.bindService(it, mConn, Context.BIND_AUTO_CREATE);
-        if (!ok) mSink.onConnected(false);
-        return ok;
+        if (!ok && mService == null) mSink.onConnected(false);
+        return ok || mService != null;
+    }
+
+    public static IBinder getSystemServiceBinder(String name) {
+        if (name == null) return null;
+        try {
+            Class<?> sm = Class.forName("android.os.ServiceManager");
+            java.lang.reflect.Method m = sm.getMethod("getService", String.class);
+            return (IBinder) m.invoke(null, name);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     public IBinder getServiceBinder() {
